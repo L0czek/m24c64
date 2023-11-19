@@ -1,6 +1,6 @@
 [package]
 name = "grapple-m24c64"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A Rust embedded-hal driver for the M24C64 I2C EEPROM"
 documentation = "https://docs.rs/grapple-m24c64"
