@@ -2,6 +2,7 @@
 name = "grapple-m24c64"
 version = "0.1.0"
 edition = "2021"
+description = "A Rust embedded-hal driver for the M24C64 I2C EEPROM"
 
 license = "MIT"
 license-file = "LICENSE"
