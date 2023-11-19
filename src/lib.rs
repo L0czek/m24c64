@@ -1,14 +1,32 @@
 // Based off the m24c64 crate, with some changes to support writing arbitrary lengths of data
+#![cfg_attr(not(test), no_std)]
+
+#![doc = include_str!("../README.md")]
 
 use embedded_hal::blocking::{i2c, delay::DelayMs};
 
+/// M24C64 Driver
 pub struct M24C64<I2C> {
+  /// I2C Interface
   i2c: I2C,
+  /// Address set by the E pins
   e_addr: u8,
+  /// Command Buffer
   cmd_buf: [u8; 34]
 }
 
 impl<I2C> M24C64<I2C> {
+  /// Create a new instance of the M24C64 Driver
+  /// # Arguments
+  /// * `i2c` - I2C Interface (from the embedded-hal crate)
+  /// * `e_addr` - The address set on the E pins
+  /// 
+  /// # Example
+  /// ```
+  /// use grapple_m24c64::M24C64;
+  /// 
+  /// let eeprom = M24C64::new(i2c, 0);
+  /// ```
   pub fn new(i2c: I2C, e_addr: u8) -> Self {
     Self {
       i2c, e_addr,
@@ -21,6 +39,7 @@ impl<I2C, E> M24C64<I2C>
 where
   I2C: i2c::Write<u8, Error = E> + i2c::WriteRead<u8, Error = E>
 {
+
   fn write_raw(&mut self, address: usize, bytes: &[u8], delay: &mut dyn DelayMs<u16>) -> Result<(), E> {
     self.cmd_buf[0] = (address >> 8) as u8;
     self.cmd_buf[1] = (address & 0xFF) as u8;
@@ -52,6 +71,8 @@ where
     self.i2c.write_read(self.e_addr | 0x50, &self.cmd_buf[0..2], bytes)
   }
 
+  /// Write an arbitrary number of bytes into the EEPROM, starting at `address`.
+  /// This function will automatically paginate.
   pub fn write(&mut self, address: usize, data: &[u8], delay: &mut dyn DelayMs<u16>) -> Result<(), E> {
     // Chunk the write into pages
     let mut i = address;
@@ -63,6 +84,8 @@ where
     Ok(())
   }
 
+  /// Read an arbitrary number of bytes from the EEPROM, starting at `address`.
+  /// This function will automatically paginate.
   pub fn read(&mut self, address: usize, data: &mut [u8]) -> Result<(), E> {
     // No need to do this per-page
     // self.read_raw(address, data)
