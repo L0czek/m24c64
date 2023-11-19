@@ -1,4 +1,7 @@
 # grapple-m24c64
+[![crates.io](https://img.shields.io/crates/v/grapple-m24c64.svg)](https://crates.io/crates/grapple-m24c64)
+[![Documentation](https://docs.rs/grapple-m24c64/badge.svg)](https://docs.rs/grapple-m24c64)
+
 A Rust embedded-hal driver for the M24C64 I2C EEPROM, featuring arbitrary-length read/writes and timeout behaviour.
 
 ## Add to your project

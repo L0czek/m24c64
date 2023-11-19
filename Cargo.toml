@@ -3,9 +3,13 @@ name = "grapple-m24c64"
 version = "0.1.0"
 edition = "2021"
 description = "A Rust embedded-hal driver for the M24C64 I2C EEPROM"
+documentation = "https://docs.rs/grapple-m24c64"
+repository = "https://github.com/GrappleRobotics/m24c64"
+readme = "README.md"
+categories = ["embedded", "hardware-support", "no-std"]
+authors = ["Jaci Brunning"]
 
 license = "MIT"
-license-file = "LICENSE"
 
 [dependencies]
 embedded-hal = "0.2.7"
