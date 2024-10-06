@@ -3,7 +3,7 @@
 
 #![doc = include_str!("../README.md")]
 
-use embedded_hal::blocking::{i2c, delay::DelayMs};
+use embedded_hal::{delay::DelayNs, i2c::I2c};
 
 /// M24C64 Driver
 pub struct M24C64<I2C> {
@@ -20,11 +20,11 @@ impl<I2C> M24C64<I2C> {
   /// # Arguments
   /// * `i2c` - I2C Interface (from the embedded-hal crate)
   /// * `e_addr` - The address set on the E pins
-  /// 
+  ///
   /// # Example
   /// ```
   /// use grapple_m24c64::M24C64;
-  /// 
+  ///
   /// let eeprom = M24C64::new(i2c, 0);
   /// ```
   pub fn new(i2c: I2C, e_addr: u8) -> Self {
@@ -35,12 +35,12 @@ impl<I2C> M24C64<I2C> {
   }
 }
 
-impl<I2C, E> M24C64<I2C>
+impl<I2C> M24C64<I2C>
 where
-  I2C: i2c::Write<u8, Error = E> + i2c::WriteRead<u8, Error = E>
+  I2C: I2c
 {
 
-  fn write_raw(&mut self, address: usize, bytes: &[u8], delay: &mut dyn DelayMs<u16>) -> Result<(), E> {
+  fn write_raw(&mut self, address: usize, bytes: &[u8], delay: &mut dyn DelayNs) -> Result<(), I2C::Error> {
     self.cmd_buf[0] = (address >> 8) as u8;
     self.cmd_buf[1] = (address & 0xFF) as u8;
     self.cmd_buf[2..(bytes.len() + 2)].copy_from_slice(bytes);
@@ -49,7 +49,7 @@ where
     // After a write, the EEPROM disconnects itself from the bus until it can perform the write internally,
     // thus we have to continually poll the i2c bus for the device to be ready to receive new bytes.
     // while self.i2c.write(self.e_addr | 0x50, &[]).is_err() { }
-    
+
     // Slight modification - keep track of the retries, since if we're over t_w from the datasheet, we want
     // to report an error instead of infinitely looping.
     let mut i = 0;
@@ -64,16 +64,16 @@ where
     }
   }
 
-  fn read_raw(&mut self, address: usize, bytes: &mut [u8]) -> Result<(), E> {
+  fn read_raw(&mut self, address: usize, bytes: &mut [u8]) -> Result<(), I2C::Error> {
     self.cmd_buf[0] = (address >> 8) as u8;
     self.cmd_buf[1] = (address & 0xFF) as u8;
-    
+
     self.i2c.write_read(self.e_addr | 0x50, &self.cmd_buf[0..2], bytes)
   }
 
   /// Write an arbitrary number of bytes into the EEPROM, starting at `address`.
   /// This function will automatically paginate.
-  pub fn write(&mut self, address: usize, data: &[u8], delay: &mut dyn DelayMs<u16>) -> Result<(), E> {
+  pub fn write(&mut self, address: usize, data: &[u8], delay: &mut dyn DelayNs) -> Result<(), I2C::Error> {
     // Chunk the write into pages
     let mut i = address;
     while i < (address + data.len()) {
@@ -86,7 +86,7 @@ where
 
   /// Read an arbitrary number of bytes from the EEPROM, starting at `address`.
   /// This function will automatically paginate.
-  pub fn read(&mut self, address: usize, data: &mut [u8]) -> Result<(), E> {
+  pub fn read(&mut self, address: usize, data: &mut [u8]) -> Result<(), I2C::Error> {
     // No need to do this per-page
     // self.read_raw(address, data)
 
